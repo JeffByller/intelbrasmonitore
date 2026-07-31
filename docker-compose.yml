@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: intelbras_db
+    restart: always
+    environment:
+      POSTGRES_USER: monitor_user
+      POSTGRES_PASSWORD: monitor_password_8820
+      POSTGRES_DB: monitor_db
+      TZ: America/Recife
+      PGTZ: America/Recife
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U monitor_user -d monitor_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - monitor_net
+
+  app:
+    build: .
+    container_name: intelbras_monitor_app
+    restart: always
+    ports:
+      - "8085:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://monitor_user:monitor_password_8820@db:5432/monitor_db
+      - ADMIN_PASSWORD=@Jnet2712
+      - SECRET_KEY=super-secret-jwt-key-intelbras-8820
+      - TZ=America/Recife
+    volumes:
+      - ./app:/app/app
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - monitor_net
+
+volumes:
+  postgres_data:
+
+networks:
+  monitor_net:
+    driver: bridge

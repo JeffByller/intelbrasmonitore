@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JNET - Monitoramento OLT & MikroTik</title>
+    <link rel="icon" type="image/jpeg" href="/static/img/logo.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dashboard-body">
+    <div class="bg-glow"></div>
+
+    <!-- Header Navigation -->
+    <header class="navbar glass-header">
+        <div class="navbar-brand">
+            <img src="/static/img/logo.jpg" alt="JNET Logo" class="brand-logo-img">
+            <div>
+                <h1 class="brand-title">JNET Telecomunicações</h1>
+                <span class="brand-subtitle">Monitoramento em Tempo Real</span>
+            </div>
+        </div>
+
+        <div class="navbar-actions">
+            <button class="btn btn-outline" onclick="triggerRoutine('olt')" title="Executar rotina da OLT agora">
+                <i class="fa-solid fa-sync fa-spin-hover"></i> OLT (2h)
+            </button>
+            <button class="btn btn-outline" onclick="triggerRoutine('mikrotik')" title="Executar rotina do MikroTik agora">
+                <i class="fa-solid fa-rotate-right"></i> MikroTik (20m)
+            </button>
+            <button class="btn btn-primary" onclick="openSettingsModal()">
+                <i class="fa-solid fa-gears"></i> Configurações
+            </button>
+            <a href="/logout" class="btn btn-icon-only btn-danger" title="Sair do Sistema">
+                <i class="fa-solid fa-power-off"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Top Metrics Cards -->
+        <section class="metrics-grid">
+            <!-- OLT Card -->
+            <div class="metric-card glass-card border-green">
+                <div class="card-header">
+                    <span class="card-tag tag-green"><i class="fa-solid fa-wifi"></i> OLT Intelbras 8820</span>
+                    <span class="pulse-indicator green" title="Monitoramento Ativo"></span>
+                </div>
+                <div class="card-body">
+                    <div class="stat-group">
+                        <div class="stat-val" id="stat-olt-online">--</div>
+                        <div class="stat-label">ONUs Online</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-sub-info">
+                        <div><i class="fa-solid fa-network-wired text-muted"></i> Total: <b id="stat-olt-total">--</b> | Off: <b id="stat-olt-offline" class="text-danger">--</b></div>
+                        <div><i class="fa-solid fa-microchip text-muted"></i> CPU OLT: <b id="stat-olt-cpu">--%</b> | RAM: <b id="stat-olt-mem">--%</b></div>
+                        <div><i class="fa-solid fa-signal text-accent"></i> Sinal Médio OLT: <b id="stat-olt-avg-rx" class="text-accent">-- dBm</b></div>
+                    </div>
+                </div>
+                <div class="card-footer-info">
+                    <i class="fa-regular fa-clock"></i> FW v<span id="stat-olt-fw">2.106</span> • Coleta: <span id="stat-olt-time">--</span>
+                </div>
+            </div>
+
+            <!-- MikroTik Card -->
+            <div class="metric-card glass-card border-blue">
+                <div class="card-header">
+                    <span class="card-tag tag-blue"><i class="fa-solid fa-router"></i> Concentrador MikroTik</span>
+                    <span class="pulse-indicator blue" title="Monitoramento Ativo"></span>
+                </div>
+                <div class="card-body">
+                    <div class="stat-group">
+                        <div class="stat-val" id="stat-mk-connections">--</div>
+                        <div class="stat-label">Conexões Ativas (PPPoE)</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-sub-info">
+                        <div><i class="fa-solid fa-microchip text-muted"></i> CPU: <b id="stat-mk-cpu">--%</b> | RAM Livre: <b id="stat-mk-ram">-- MB</b></div>
+                        <div><i class="fa-solid fa-ban text-warning"></i> Bloqueados (Pgcorte): <b id="stat-mk-blocked" class="text-warning">--</b></div>
+                        <div><i class="fa-solid fa-uptime text-muted"></i> Uptime: <b id="stat-mk-uptime">--</b></div>
+                    </div>
+                </div>
+                <div class="card-footer-info">
+                    <i class="fa-regular fa-clock"></i> <span id="stat-mk-board">MikroTik</span> • <span id="stat-mk-time">--</span>
+                </div>
+            </div>
+
+            <!-- BGP Sessions Card Summary -->
+            <div class="metric-card glass-card border-purple">
+                <div class="card-header">
+                    <span class="card-tag tag-purple"><i class="fa-solid fa-diagram-project"></i> Sessões BGP (Core)</span>
+                    <span class="pulse-indicator purple" id="bgp-pulse"></span>
+                </div>
+                <div class="card-body">
+                    <div class="stat-group">
+                        <div class="stat-val" id="stat-bgp-established">-- / 4</div>
+                        <div class="stat-label">Established</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-sub-info">
+                        <div><i class="fa-solid fa-circle-check text-success"></i> 4 Sessões Esperadas</div>
+                        <div id="bgp-alert-badge"><i class="fa-solid fa-shield-halved text-success"></i> Notificações Telegram: <b>Ativas</b></div>
+                    </div>
+                </div>
+                <div class="card-footer-info">
+                    <i class="fa-solid fa-bell"></i> Alerta de Queda e Restabelecimento
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Tab Controls -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('tab-general')">
+                <i class="fa-solid fa-chart-line"></i> Visão Geral & Histórico
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab-olt')">
+                <i class="fa-solid fa-list-check"></i> ONUs OLT 8820 (<span id="count-onu-tab">0</span>)
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab-mikrotik')">
+                <i class="fa-solid fa-network-wired"></i> MikroTik, RADIUS & Clientes
+            </button>
+        </div>
+
+        <!-- TAB 1: General & Charts (Clean & Ordered) -->
+        <section id="tab-general" class="tab-content active">
+            <!-- Charts Grid (Top section below cards) -->
+            <div class="charts-grid mb-4">
+                <div class="chart-card glass-panel">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-line text-green"></i> Histórico de ONUs da OLT 8820</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="oltChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card glass-panel">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-area text-blue"></i> Histórico de Conexões MikroTik</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="mikrotikChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PON Transceiver Ports Grid (Bottom of Visão Geral) -->
+            <h3 class="section-title mt-4"><i class="fa-solid fa-plug-circle-bolt text-green"></i> Status das 8 Portas PON da OLT 8820 (GBIC Transceivers)</h3>
+            <div class="bgp-grid" id="pon-ports-cards">
+                <!-- Dynamic PON Cards -->
+            </div>
+        </section>
+
+        <!-- TAB 2: Intelbras OLT ONUs List (PAGINATED 15 PER PAGE) -->
+        <section id="tab-olt" class="tab-content">
+            <div class="glass-panel p-4">
+                <div class="table-toolbar">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="onu-search" placeholder="Buscar por Nome, Serial, MAC, GPON ou Modelo..." oninput="onSearchInput()">
+                    </div>
+                    <div class="filter-box">
+                        <select id="onu-status-filter" onchange="onSearchInput()">
+                            <option value="all">Todos os Status</option>
+                            <option value="online">Online</option>
+                            <option value="offline">Offline</option>
+                            <option value="warning">Sinal Baixo (<-25 dBm)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive mt-3">
+                    <table class="custom-table" id="onu-table">
+                        <thead>
+                            <tr>
+                                <th>GPON / ONU ID</th>
+                                <th>Descrição / Cliente</th>
+                                <th>Serial MAC</th>
+                                <th>Modelo / Fabricante</th>
+                                <th>Status</th>
+                                <th>OMCI</th>
+                                <th>OLT Rx (dBm)</th>
+                                <th>ONU Rx (dBm)</th>
+                                <th>Distância</th>
+                                <th>Uptime ONU</th>
+                            </tr>
+                        </thead>
+                        <tbody id="onu-table-body">
+                            <!-- Dynamic ONUs (15 items max per page) -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Toolbar -->
+                <div class="pagination-toolbar mt-3">
+                    <div class="pagination-info">
+                        Mostrando <b id="page-start">0</b> a <b id="page-end">0</b> de <b id="total-filtered-onus">0</b> ONUs
+                    </div>
+                    <div class="pagination-buttons">
+                        <button class="btn btn-outline btn-sm" id="btn-prev-page" onclick="changePage(-1)" disabled>
+                            <i class="fa-solid fa-chevron-left"></i> Anterior
+                        </button>
+                        <span class="page-num-badge" id="page-indicator">Página 1 de 1</span>
+                        <button class="btn btn-outline btn-sm" id="btn-next-page" onclick="changePage(1)" disabled>
+                            Próximo <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: MikroTik Details & RADIUS & BGP & Top Clients & Interfaces & Blocked -->
+        <section id="tab-mikrotik" class="tab-content">
+            <!-- RADIUS Server Health Cards -->
+            <div class="glass-panel p-4 mb-4">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-database text-purple"></i> Monitoramento de Servidor RADIUS</h3>
+                    <span class="badge badge-purple">Servidores Autenticação</span>
+                </div>
+                <div class="bgp-grid mt-3" id="radius-cards">
+                    <!-- Dynamic Radius Cards -->
+                </div>
+            </div>
+
+            <!-- BGP Sessions Grid -->
+            <div class="glass-panel p-4 mb-4">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-diagram-project text-purple"></i> Status das Sessões BGP (Core)</h3>
+                    <span class="badge badge-info">Roteamento BGP</span>
+                </div>
+                <div class="bgp-grid mt-3" id="bgp-grid-cards">
+                    <!-- Dynamic BGP Cards -->
+                </div>
+            </div>
+
+            <!-- Ethernet Interfaces Grid -->
+            <div class="glass-panel p-4 mb-4">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-ethernet text-blue"></i> Interfaces Ethernet do Concentrador</h3>
+                    <span class="badge badge-info">Interface Ethernet Status</span>
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Nome Interface</th>
+                                <th>Status Link</th>
+                                <th>MAC Address</th>
+                                <th>Comentário</th>
+                            </tr>
+                        </thead>
+                        <tbody id="interfaces-table">
+                            <!-- Dynamic Interfaces -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Blocked Clients List (rbfull_pgcorte) -->
+            <div class="glass-panel p-4 mb-4 border-warning">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-user-slash text-warning"></i> Clientes Bloqueados (<code class="text-warning">rbfull_pgcorte</code>)</h3>
+                    <span class="badge badge-danger">Total Bloqueados: <b id="count-blocked-clients">0</b></span>
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Usuário PPPoE</th>
+                                <th>IP do Cliente (Bloqueado)</th>
+                                <th>MAC Address</th>
+                                <th>Tempo Conectado</th>
+                                <th>Lista Firewall</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blocked-clients-table">
+                            <!-- Dynamic Blocked Clients -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top 10 Clients by Uptime -->
+            <div class="glass-panel p-4 mb-4">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-users text-blue"></i> Clientes a Mais Tempo Conectados (Top 10)</h3>
+                    <span class="badge badge-info">Top 10 PPPoE</span>
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Usuário PPPoE</th>
+                                <th>IP Atribuído</th>
+                                <th>MAC Address</th>
+                                <th>Tempo Conectado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-clients-table">
+                            <!-- Dynamic Top 10 Clients -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- SETTINGS & CREDENTIALS MODAL -->
+    <div class="modal-backdrop" id="settings-modal">
+        <div class="modal-card glass-panel">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-sliders"></i> Configurações do Sistema</h3>
+                <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="settings-form" onsubmit="saveSettings(event)">
+                    <!-- OLT Settings -->
+                    <div class="form-section">
+                        <h4><i class="fa-solid fa-wifi text-green"></i> Intelbras OLT 8820</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>IP da OLT</label>
+                                <input type="text" id="olt_ip" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Porta (SSH/Telnet)</label>
+                                <input type="number" id="olt_port" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Usuário CLI</label>
+                                <input type="text" id="olt_user" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Senha CLI</label>
+                                <input type="password" id="olt_password">
+                            </div>
+                            <div class="form-group">
+                                <label>Intervalo de Rotina (Minutos)</label>
+                                <input type="number" id="olt_interval_minutes" value="120" min="5" required>
+                                <small class="form-text">Padrão: 120 minutos (2 horas)</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Delay entre Comandos CLI (Seg)</label>
+                                <input type="number" step="0.1" id="olt_command_delay" value="0.5" min="0.1" required>
+                                <small class="form-text">Evita picos de CPU na OLT</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MikroTik Settings -->
+                    <div class="form-section mt-3">
+                        <h4><i class="fa-solid fa-router text-blue"></i> Concentrador MikroTik</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>IP do MikroTik</label>
+                                <input type="text" id="mikrotik_ip" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Porta API (8728/8729/80/443)</label>
+                                <input type="number" id="mikrotik_port" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Usuário API</label>
+                                <input type="text" id="mikrotik_user" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Senha API</label>
+                                <input type="password" id="mikrotik_password">
+                            </div>
+                            <div class="form-group">
+                                <label>Intervalo de Rotina (Minutos)</label>
+                                <input type="number" id="mikrotik_interval_minutes" value="20" min="1" required>
+                                <small class="form-text">Padrão: 20 minutos</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Gatilho Queda Clientes</label>
+                                <input type="number" id="mikrotik_drop_threshold" value="2" min="1" required>
+                                <small class="form-text">Avisar se cair >= X clientes na rotina</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Telegram Settings -->
+                    <div class="form-section mt-3">
+                        <h4><i class="fa-brands fa-telegram text-accent"></i> Notificações Telegram</h4>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Bot Token Telegram</label>
+                                <input type="text" id="telegram_bot_token" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>ID do Grupo / Chat ID Telegram</label>
+                                <input type="text" id="telegram_chat_id" placeholder="-1001234567890">
+                            </div>
+                            <div class="form-group checkbox-group full-width">
+                                <label class="switch-label">
+                                    <input type="checkbox" id="telegram_alerts_enabled" checked>
+                                    <span class="switch-slider"></span>
+                                    <span>Ativar alertas de Queda BGP e Desconexões</span>
+                                </label>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline mt-2" onclick="testTelegramAlert()">
+                            <i class="fa-paper-plane"></i> Testar Notificação Telegram
+                        </button>
+                    </div>
+
+                    <div class="modal-footer mt-4">
+                        <button type="button" class="btn btn-secondary" onclick="closeSettingsModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Salvar e Fechar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
