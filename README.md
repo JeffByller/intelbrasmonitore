@@ -78,7 +78,7 @@ http://localhost:8085
 ```
 
 > **Credenciais Padrão de Acesso:**  
-> * **Senha de Admin:** `@Jnet2712` (pode ser alterada via variáveis de ambiente no `docker-compose.yml`)
+> * **Senha de Admin:** `suasenhaqui` (pode ser alterada via variáveis de ambiente no `docker-compose.yml`)
 
 ---
 

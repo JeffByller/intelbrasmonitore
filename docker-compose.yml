@@ -32,7 +32,7 @@ services:
       - "8085:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://monitor_user:monitor_password_8820@db:5432/monitor_db
-      - ADMIN_PASSWORD=@Jnet2712
+      - ADMIN_PASSWORD=suasenhaqui
       - SECRET_KEY=super-secret-jwt-key-intelbras-8820
       - TZ=America/Recife
     volumes:
