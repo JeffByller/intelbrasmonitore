@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JNET - Login de Acesso</title>
+    <link rel="icon" type="image/jpeg" href="/static/img/logo.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="login-body">
+    <div class="login-background-glow"></div>
+    <div class="login-container">
+        <div class="login-card glass-panel">
+            <div class="login-header">
+                <img src="/static/img/logo.jpg" alt="JNET Logo" class="brand-logo-img mb-2" style="width: 72px; height: 72px;">
+                <h2>JNET Telecomunicações</h2>
+                <p>Sistema de Monitoramento OLT & MikroTik</p>
+            </div>
+
+            {% if error %}
+            <div class="alert alert-danger">
+                <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+            </div>
+            {% endif %}
+
+            <form action="/login" method="POST" class="login-form">
+                <div class="form-group">
+                    <label for="password"><i class="fa-solid fa-lock"></i> Senha de Acesso Master</label>
+                    <input type="password" id="password" name="password" placeholder="Digite sua senha..." required autofocus>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-right-to-bracket"></i> Entrar no Painel
+                </button>
+            </form>
+            <div class="login-footer">
+                <span>Conectando Você Ao Que Importa!</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
