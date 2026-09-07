@@ -1,7 +1,11 @@
+# Ignorar arquivos temporarios do Python / sistema
 __pycache__/
 *.pyc
 .DS_Store
+
+# Ignorar banco de dados / dados locais / senhas
 data/
 *.db
 *.sqlite3
 logs/
+.env
