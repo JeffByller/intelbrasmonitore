@@ -392,7 +392,6 @@ async def get_history_charts(request: Request, range: Optional[str] = "2d"):
         "2d": datetime.timedelta(days=2),
         "7d": datetime.timedelta(days=7),
         "30d": datetime.timedelta(days=30),
-        "60d": datetime.timedelta(days=60),
     }
     delta = range_map.get(range, datetime.timedelta(days=2))
     cutoff = now - delta
@@ -418,7 +417,7 @@ async def get_history_charts(request: Request, range: Optional[str] = "2d"):
             fallback_mk = await session.execute(select(MikrotikMetrics).order_by(MikrotikMetrics.id.desc()).limit(20))
             mk_list = list(reversed(fallback_mk.scalars().all()))
 
-        fmt = "%d/%m %H:%M" if range in ["7d", "30d", "60d"] else "%H:%M"
+        fmt = "%d/%m %H:%M" if range in ["7d", "30d"] else "%H:%M"
 
         return {
             "olt_history": [

@@ -11,7 +11,7 @@ from app.collectors.mikrotik import run_mikrotik_routine
 logger = logging.getLogger("scheduler")
 scheduler = AsyncIOScheduler()
 
-async def purge_old_metrics(days: int = 60):
+async def purge_old_metrics(days: int = 30):
     logger.info(f"Checking for metrics history older than {days} days...")
     cutoff = datetime.datetime.now() - datetime.timedelta(days=days)
     try:
@@ -51,9 +51,10 @@ async def start_scheduler():
             purge_old_metrics,
             trigger=IntervalTrigger(hours=24),
             id='purge_metrics_job',
-            replace_existing=True
+            replace_existing=True,
+            args=[30]
         )
-    asyncio.create_task(purge_old_metrics(60))
+    asyncio.create_task(purge_old_metrics(30))
 
     # Retrieve stored intervals from database
     async with AsyncSessionLocal() as session:
