@@ -1,8 +1,9 @@
 import datetime
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Text, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
 from app.config import settings
+from app.crypto import encrypt_value, is_encrypted
 
 # Engine configuration
 database_url = settings.DATABASE_URL
@@ -191,3 +192,17 @@ async def init_db():
             default_settings = SystemSettings()
             session.add(default_settings)
             await session.commit()
+        else:
+            # Auto-encrypt legacy plain text credentials in system_settings
+            res = await session.execute(select(SystemSettings).where(SystemSettings.id == 1))
+            s = res.scalar_one_or_none()
+            if s:
+                changed = False
+                if s.mikrotik_password and not is_encrypted(s.mikrotik_password):
+                    s.mikrotik_password = encrypt_value(s.mikrotik_password)
+                    changed = True
+                if s.olt_password and not is_encrypted(s.olt_password):
+                    s.olt_password = encrypt_value(s.olt_password)
+                    changed = True
+                if changed:
+                    await session.commit()

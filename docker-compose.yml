@@ -4,15 +4,15 @@ services:
     container_name: intelbras_db
     restart: always
     environment:
-      POSTGRES_USER: monitor_user
-      POSTGRES_PASSWORD: monitor_password_8820
-      POSTGRES_DB: monitor_db
-      TZ: America/Recife
-      PGTZ: America/Recife
+      POSTGRES_USER: ${POSTGRES_USER:-monitor_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-monitor_db}
+      TZ: ${TZ:-America/Recife}
+      PGTZ: ${TZ:-America/Recife}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U monitor_user -d monitor_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-monitor_user} -d ${POSTGRES_DB:-monitor_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -34,12 +34,12 @@ services:
     container_name: intelbras_monitor_app
     restart: always
     ports:
-      - "8085:8000"
+      - "${PORT:-8085}:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://monitor_user:monitor_password_8820@db:5432/monitor_db
-      - ADMIN_PASSWORD=@Jnet2712
-      - SECRET_KEY=super-secret-jwt-key-intelbras-8820
-      - TZ=America/Recife
+      - DATABASE_URL=${DATABASE_URL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - SECRET_KEY=${SECRET_KEY}
+      - TZ=${TZ:-America/Recife}
     volumes:
       - ./app:/app/app
     logging:

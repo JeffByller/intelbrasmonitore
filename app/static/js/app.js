@@ -484,6 +484,10 @@ async function openSettingsModal() {
         document.getElementById("olt_port").value = s.olt_port || 22;
         document.getElementById("olt_user").value = s.olt_user || "";
         document.getElementById("olt_password").value = s.olt_password || "";
+        document.getElementById("olt_password").type = "password";
+        const iconOlt = document.getElementById("icon-olt_password");
+        if (iconOlt) iconOlt.className = "fa-solid fa-eye";
+
         document.getElementById("olt_interval_minutes").value = s.olt_interval_minutes || 120;
         document.getElementById("olt_command_delay").value = s.olt_command_delay || 0.5;
 
@@ -491,6 +495,10 @@ async function openSettingsModal() {
         document.getElementById("mikrotik_port").value = s.mikrotik_port || 8728;
         document.getElementById("mikrotik_user").value = s.mikrotik_user || "";
         document.getElementById("mikrotik_password").value = s.mikrotik_password || "";
+        document.getElementById("mikrotik_password").type = "password";
+        const iconMk = document.getElementById("icon-mikrotik_password");
+        if (iconMk) iconMk.className = "fa-solid fa-eye";
+
         document.getElementById("mikrotik_interval_minutes").value = s.mikrotik_interval_minutes || 20;
         document.getElementById("mikrotik_drop_threshold").value = s.mikrotik_drop_threshold || 2;
 
@@ -503,6 +511,36 @@ async function openSettingsModal() {
         showToast("Erro ao carregar configurações", "danger");
     }
 }
+
+async function toggleSecretVisibility(fieldId) {
+    const input = document.getElementById(fieldId);
+    const icon = document.getElementById("icon-" + fieldId);
+    if (!input) return;
+
+    if (input.type === "password") {
+        if (input.value === "••••••••") {
+            try {
+                const res = await fetch(`/api/settings/reveal-secret?field=${fieldId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    input.value = data.value || "";
+                }
+            } catch (err) {
+                console.error("Erro ao consultar credencial:", err);
+            }
+        }
+        input.type = "text";
+        if (icon) {
+            icon.className = "fa-solid fa-eye-slash";
+        }
+    } else {
+        input.type = "password";
+        if (icon) {
+            icon.className = "fa-solid fa-eye";
+        }
+    }
+}
+window.toggleSecretVisibility = toggleSecretVisibility;
 
 function closeSettingsModal() {
     document.getElementById("settings-modal").classList.remove("open");

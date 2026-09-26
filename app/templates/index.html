@@ -348,8 +348,17 @@
                                 <input type="text" id="olt_user" required>
                             </div>
                             <div class="form-group">
-                                <label>Senha CLI</label>
-                                <input type="password" id="olt_password">
+                                <label>
+                                    Senha CLI 
+                                    <span class="badge-encrypted" title="Armazenada com criptografia AES"><i class="fa-solid fa-lock"></i> Criptografada</span>
+                                </label>
+                                <div class="input-password-wrapper">
+                                    <input type="password" id="olt_password" placeholder="••••••••">
+                                    <button type="button" class="btn-toggle-pw" onclick="toggleSecretVisibility('olt_password')" title="Mostrar / Ocultar Senha">
+                                        <i class="fa-solid fa-eye" id="icon-olt_password"></i>
+                                    </button>
+                                </div>
+                                <small class="form-text">Deixe em branco para manter a atual.</small>
                             </div>
                             <div class="form-group">
                                 <label>Intervalo de Rotina (Minutos)</label>
@@ -381,8 +390,17 @@
                                 <input type="text" id="mikrotik_user" required>
                             </div>
                             <div class="form-group">
-                                <label>Senha API</label>
-                                <input type="password" id="mikrotik_password">
+                                <label>
+                                    Senha API 
+                                    <span class="badge-encrypted" title="Armazenada com criptografia AES"><i class="fa-solid fa-lock"></i> Criptografada</span>
+                                </label>
+                                <div class="input-password-wrapper">
+                                    <input type="password" id="mikrotik_password" placeholder="••••••••">
+                                    <button type="button" class="btn-toggle-pw" onclick="toggleSecretVisibility('mikrotik_password')" title="Mostrar / Ocultar Senha">
+                                        <i class="fa-solid fa-eye" id="icon-mikrotik_password"></i>
+                                    </button>
+                                </div>
+                                <small class="form-text">Deixe em branco para manter a atual.</small>
                             </div>
                             <div class="form-group">
                                 <label>Intervalo de Rotina (Minutos)</label>

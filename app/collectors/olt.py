@@ -6,6 +6,7 @@ import paramiko
 import telnetlib
 from sqlalchemy import select, delete
 from app.database import AsyncSessionLocal, SystemSettings, OLTONU, OLTCardStats, OLTPonPort, OLTMetricsHistory
+from app.crypto import decrypt_value
 
 logger = logging.getLogger("olt_collector")
 
@@ -263,7 +264,7 @@ async def run_olt_routine():
         ip = settings.olt_ip
         port = settings.olt_port or 2323
         user = settings.olt_user
-        password = settings.olt_password
+        password = decrypt_value(settings.olt_password)
         cmd_delay = settings.olt_command_delay or 0.5
 
         full_output = ""

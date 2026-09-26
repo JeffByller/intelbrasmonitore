@@ -11,6 +11,7 @@ from app.database import (
     MikrotikTopClient, MikrotikInterface, MikrotikRadius, MikrotikBlockedClient
 )
 from app.services.telegram import notify_bgp_down, notify_bgp_up, notify_client_drop
+from app.crypto import decrypt_value
 
 logger = logging.getLogger("mikrotik_collector")
 
@@ -255,7 +256,7 @@ async def run_mikrotik_routine():
         ip = settings.mikrotik_ip
         port = settings.mikrotik_port or 8728
         user = settings.mikrotik_user
-        password = settings.mikrotik_password
+        password = decrypt_value(settings.mikrotik_password)
         drop_threshold = settings.mikrotik_drop_threshold or 2
         bot_token = settings.telegram_bot_token
         chat_id = settings.telegram_chat_id

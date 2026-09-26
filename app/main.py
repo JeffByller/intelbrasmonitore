@@ -18,6 +18,7 @@ from app.database import (
 )
 from app.scheduler import start_scheduler, reschedule_jobs, scheduled_olt_job, scheduled_mikrotik_job
 from app.services.telegram import send_telegram_alert
+from app.crypto import encrypt_value, decrypt_value
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("main_app")
@@ -100,18 +101,18 @@ class SettingsPayload(BaseModel):
     olt_ip: str
     olt_port: int
     olt_user: str
-    olt_password: str
+    olt_password: Optional[str] = ""
     olt_interval_minutes: int
     olt_command_delay: float
     mikrotik_ip: str
     mikrotik_port: int
     mikrotik_user: str
-    mikrotik_password: str
+    mikrotik_password: Optional[str] = ""
     mikrotik_interval_minutes: int
     mikrotik_drop_threshold: int
-    telegram_bot_token: str
-    telegram_chat_id: str
-    telegram_alerts_enabled: bool
+    telegram_bot_token: Optional[str] = ""
+    telegram_chat_id: Optional[str] = ""
+    telegram_alerts_enabled: bool = True
 
 class TelegramTestPayload(BaseModel):
     bot_token: str
@@ -132,19 +133,37 @@ async def get_settings(request: Request):
             "olt_ip": s.olt_ip,
             "olt_port": s.olt_port,
             "olt_user": s.olt_user,
-            "olt_password": s.olt_password,
+            "olt_password": "••••••••" if s.olt_password else "",
+            "has_olt_password": bool(s.olt_password),
             "olt_interval_minutes": s.olt_interval_minutes,
             "olt_command_delay": s.olt_command_delay,
             "mikrotik_ip": s.mikrotik_ip,
             "mikrotik_port": s.mikrotik_port,
             "mikrotik_user": s.mikrotik_user,
-            "mikrotik_password": s.mikrotik_password,
+            "mikrotik_password": "••••••••" if s.mikrotik_password else "",
+            "has_mikrotik_password": bool(s.mikrotik_password),
             "mikrotik_interval_minutes": s.mikrotik_interval_minutes,
             "mikrotik_drop_threshold": s.mikrotik_drop_threshold,
             "telegram_bot_token": s.telegram_bot_token,
             "telegram_chat_id": s.telegram_chat_id,
             "telegram_alerts_enabled": s.telegram_alerts_enabled,
         }
+
+@app.get("/api/settings/reveal-secret")
+async def reveal_secret(field: str, request: Request):
+    if not get_current_user_from_cookie(request):
+        raise HTTPException(status_code=401, detail="Não autorizado")
+    
+    if field not in ["mikrotik_password", "olt_password"]:
+        raise HTTPException(status_code=400, detail="Campo não permitido")
+    
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(SystemSettings).where(SystemSettings.id == 1))
+        s = result.scalar_one_or_none()
+        if not s:
+            return {"value": ""}
+        raw = getattr(s, field, "")
+        return {"value": decrypt_value(raw)}
 
 @app.post("/api/settings")
 async def update_settings(payload: SettingsPayload, request: Request):
@@ -161,14 +180,16 @@ async def update_settings(payload: SettingsPayload, request: Request):
         s.olt_ip = payload.olt_ip
         s.olt_port = payload.olt_port
         s.olt_user = payload.olt_user
-        s.olt_password = payload.olt_password
+        if payload.olt_password and payload.olt_password != "••••••••":
+            s.olt_password = encrypt_value(payload.olt_password)
         s.olt_interval_minutes = payload.olt_interval_minutes
         s.olt_command_delay = payload.olt_command_delay
         
         s.mikrotik_ip = payload.mikrotik_ip
         s.mikrotik_port = payload.mikrotik_port
         s.mikrotik_user = payload.mikrotik_user
-        s.mikrotik_password = payload.mikrotik_password
+        if payload.mikrotik_password and payload.mikrotik_password != "••••••••":
+            s.mikrotik_password = encrypt_value(payload.mikrotik_password)
         s.mikrotik_interval_minutes = payload.mikrotik_interval_minutes
         s.mikrotik_drop_threshold = payload.mikrotik_drop_threshold
 
@@ -179,7 +200,7 @@ async def update_settings(payload: SettingsPayload, request: Request):
         await session.commit()
     
     reschedule_jobs(payload.olt_interval_minutes, payload.mikrotik_interval_minutes)
-    return {"status": "success", "message": "Configurações salvas com sucesso!"}
+    return {"status": "success", "message": "Configurações salvas e senhas protegidas com sucesso!"}
 
 @app.get("/api/dashboard/summary")
 async def get_dashboard_summary(request: Request):
