@@ -439,10 +439,10 @@ async function loadHistoryCharts() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#9CA3AF' } } },
+                plugins: { legend: { labels: { color: '#4B5563', font: { family: "'Outfit', sans-serif", weight: '500' } } } },
                 scales: {
-                    x: { ticks: { color: '#6B7280' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    y: { ticks: { color: '#6B7280' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    x: { ticks: { color: '#6B7280' }, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+                    y: { ticks: { color: '#6B7280' }, grid: { color: 'rgba(0, 0, 0, 0.05)' } }
                 }
             }
         });
@@ -455,16 +455,16 @@ async function loadHistoryCharts() {
             data: {
                 labels: mkLabels,
                 datasets: [
-                    { label: 'Conexões PPPoE Ativas', data: mkConnData, borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.15)', fill: true, tension: 0.3 }
+                    { label: 'Conexões PPPoE Ativas', data: mkConnData, borderColor: '#673DE6', backgroundColor: 'rgba(103, 61, 230, 0.08)', fill: true, tension: 0.3 }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#9CA3AF' } } },
+                plugins: { legend: { labels: { color: '#4B5563', font: { family: "'Outfit', sans-serif", weight: '500' } } } },
                 scales: {
-                    x: { ticks: { color: '#6B7280' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    y: { beginAtZero: true, ticks: { color: '#6B7280' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    x: { ticks: { color: '#6B7280' }, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+                    y: { beginAtZero: true, ticks: { color: '#6B7280' }, grid: { color: 'rgba(0, 0, 0, 0.05)' } }
                 }
             }
         });
